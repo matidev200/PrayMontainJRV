@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monte de oración JRV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;800&family=Roboto:wght@500&display=swap');
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        * {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f5f5;
+        }
+
+        main {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="flex justify-center py-14 p-2">
+        <!-- Modal para mostrar el mensaje de agradecimiento -->
+        {% if mensaje == 'aprobado' %}
+        <div id="myModal"
+            class="fixed inset-0 z-50 flex items-center justify-center backdrop-filter backdrop-blur-md bg-opacity-70">
+            <div class="bg-white rounded-lg p-8 flex items-center flex-col">
+                <h2 class="text-2xl font-semibold mb-4">Estas inscripto/a para venir a orar.</h2>
+                <p>Hemos recibo tu Inscripción correctamente, muchas gracias por tu tiempo.
+                </p>
+                <img src="{{ url_for('static', filename='src/animation_lkvrsrkg_small.gif') }}" alt="">
+                <button id="closeModalButton" class="mt-4 px-4 py-2 bg-black text-white rounded ">Cerrar</button>
+            </div>
+        </div>
+        {% endif %}
+        {% if mensaje == 'error' %}
+        <div id="myModal"
+            class="fixed inset-0 z-50 flex items-center justify-center backdrop-filter backdrop-blur-md bg-opacity-70">
+            <div class="bg-white rounded-lg p-8 flex items-center flex-col">
+                <h2 class="text-2xl font-semibold mb-4">El horario que seleccionaste no esta disponible</h2>
+                <p>El día y horario que seleccionaste ya lo ocupa otra persona, por favor selecciona otro espacio si es
+                    posible.
+                </p>
+                <img src="{{ url_for('static', filename='src/animation_lkvrxibk_small.gif') }}" alt="">
+                <button id="closeModalButton" class="mt-4 px-4 py-2 bg-black text-white rounded ">Cerrar</button>
+            </div>
+        </div>
+
+        {% endif %}
+        <div class="flex flex-col gap-8">
+            <div class="flex flex-col bg-[#A993A5]/40 lg:max-h-32 max-sm:max-h-70 p-4 rounded-lg ">
+                <h1 class="text-3xl font-bold">Monte de oración | Inscripción 🗻</h1>
+                <p>Rellena el siguiente formulario con unos simples datos para poder venir a orar. <br>
+                    Solo podes elegir un día y estar como máximo una hora.</p>
+            </div>
+            <div>
+                <form action="/" method="POST" class="flex flex-col gap-2 p-2" x-data="appData()"
+                    x-init="loadHorarios()">
+
+                    <label for="nombre">Tu nombre y apellido:</label>
+                    <input type="text" id="nombre" name="nombre" class="h-8 border rounded-lg" required>
+
+                    <label for="telefono">Tu número de telefono:</label>
+                    <input type="number" id="telefono" name="telefono" class="h-8 border rounded-lg" required>
+
+                    <label for="dia_oracion">Selecciona el día que puedes venir a orar:</label>
+                    <select name="dia_oracion" id="dia_oracion" class="h-8 border rounded-lg" required
+                        x-on:change="loadHorarios()" x-init="loadDays()" x-model="selected_day">
+                        <template x-for="day in days" :key="day">
+                            <option x-text="day" :value="day"></option>
+                        </template>
+                    </select>
+
+                    <label for="rango_horario">Selecciona la hora:</label>
+                    <select name="rango_horario" class="h-8 border rounded-lg" required>
+                        <template x-for="horario in rango_horario" :key="horario">
+                            <option x-text="horario" :value="horario"></option>
+                        </template>
+                    </select>
+
+                    <div class="flex justify-center py-4">
+                        <button type="submit"
+                            class="bg-gray-300 text-gray-700 rounded-lg px-10 py-2 hover:bg-gray-400 transition-colors">Enviar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <script>
+        function appData() {
+            return {
+                days: [],
+                selected_day: '',
+                rango_horario: [],
+
+                loadHorarios() {
+                    if (this.selected_day) {
+                        fetch(`/horarios/${this.selected_day}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                this.rango_horario = data;
+
+                            })
+                            .catch(error => {
+                                console.error('Error al obtener los horarios disponibles:', error);
+                            });
+                    } else {
+                        fetch("/horarios/Lunes")
+                            .then(response => response.json())
+                            .then(data => {
+                                this.rango_horario = data;
+
+                            })
+                            .catch(error => {
+                                console.error('Error al obtener los horarios disponibles:', error);
+                            });
+                    }
+
+                },
+
+
+                loadDays() {
+                    fetch(`/dias/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.days = data;
+                        })
+                        .catch(error => {
+                            console.error('Error al obtener los horarios disponibles:', error);
+                        });
+                },
+
+
+            }
+        }
+
+
+    </script>
+    <script>
+        document.getElementById('closeModalButton').addEventListener('click', function () {
+            document.getElementById('myModal').classList.add('hidden');
+        });
+    </script>
+
+
+</body>
+
+</html>

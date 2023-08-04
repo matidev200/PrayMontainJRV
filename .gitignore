@@ -1,0 +1,5 @@
+env
+config.conf
+db/database.db
+db/schema.sql
+__pycache__
