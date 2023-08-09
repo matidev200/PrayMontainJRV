@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, g, jsonify
+from flask import Flask, render_template, request, g, jsonify, send_from_directory
 import sqlite3
 from configparser import ConfigParser
 
@@ -34,16 +34,16 @@ def get_dias_disponibles():
 @app.route('/horarios/<dia>/', methods=['GET'])
 def get_horarios_disponibles(dia):
     db = get_db()
-    cursor = db.execute('SELECT horario_disponible FROM horarios_disponibles WHERE dia_oracion = ?', (dia,))
-    horarios =  [row['horario_disponible'] for row in cursor.fetchall()]
+    cursor = db.execute('SELECT horario_disponible FROM horarios_disponibles WHERE dia_oracion = ? ORDER BY horario_disponible', (dia,))
+    horarios = [row['horario_disponible'] for row in cursor.fetchall()]
     return jsonify(horarios)
 
-def guardar_orador(nombre,telefono, dia_oracion, rango_horario):
+def guardar_orador(nombre,telefono, dia_oracion, rango_horario,rango_horario_deseado):
     db = get_db()
     cursor = db.cursor()
     try:
-        cursor.execute('INSERT INTO orador (nombre, telefono , dia_oracion, rango_horario) VALUES (?, ?, ?, ?)',
-                       (nombre, telefono,dia_oracion,rango_horario)) 
+        cursor.execute('INSERT INTO orador (nombre, telefono , dia_oracion, rango_horario, rango_horario_deseado) VALUES (?, ?, ?, ?, ?)',
+                       (nombre, telefono,dia_oracion,rango_horario, rango_horario_deseado)) 
         db.commit()
 
         eliminar_horario(dia_oracion, rango_horario)
@@ -68,6 +68,11 @@ def eliminar_horario(dia_oracion, rango_horario):
     finally:
         cursor.close()
 
+
+@app.route('/horarios_libres.json')
+def horarios_libres():
+    return send_from_directory(app.static_folder, 'data/horarios.json')
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -76,7 +81,9 @@ def index():
             telefono = request.form['telefono']
             dia_oracion = request.form['dia_oracion']
             rango_horario = request.form['rango_horario']
-            guardar_orador(nombre, telefono,dia_oracion, rango_horario)
+            rango_horario_deseado = request.form['rango_horario_deseado']
+
+            guardar_orador(nombre, telefono,dia_oracion, rango_horario, rango_horario_deseado)
             mensaje = 'aprobado'
             return render_template('index.html', mensaje = mensaje)
         except Exception as e:

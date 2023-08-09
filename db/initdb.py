@@ -1,7 +1,10 @@
 import sqlite3
+import os
 
 # Conectarse a la base de datos (o crearla si no existe)
-conn = sqlite3.connect('horarios.db')
+DATABASE_PATH = os.path.join(os.path.dirname(__file__), '../horarios.db')
+
+conn = sqlite3.connect(DATABASE_PATH)
 cursor = conn.cursor()
 
 # Crear la tabla de horarios_disponibles si no existe
@@ -33,6 +36,7 @@ try:
             nombre VARCHAR(50),
             telefono VARCHAR(15) CHECK(telefono GLOB '[0-9]*'), -- Nueva columna telefono con restricción de solo números
             dia_oracion VARCHAR(20),
+            rango_horario_deseado TEXT,
             rango_horario TEXT,
             CONSTRAINT unique_orador UNIQUE (dia_oracion, rango_horario)
         )
